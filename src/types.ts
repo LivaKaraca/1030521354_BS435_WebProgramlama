@@ -1,1 +1,8 @@
-export type Screen = "start" | "game" | "result";
+// src/types.ts
+
+export interface ImageOption {
+  id: number;
+  src: string;
+  isAI: boolean;
+  hint: string;
+}

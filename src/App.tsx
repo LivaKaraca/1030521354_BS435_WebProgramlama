@@ -8,13 +8,16 @@ const App: React.FC = () => {
   const [screen, setScreen] = useState<"start" | "game" | "result">("start");
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
+  // Oyunu başlat
   const handleStart = () => setScreen("game");
 
+  // Oyun sonucu geldiğinde çalışır
   const handleGameEnd = (correct: boolean) => {
     setIsCorrect(correct);
     setScreen("result");
   };
 
+  // Yeniden başlatma
   const handleRestart = () => {
     setIsCorrect(null);
     setScreen("start");
@@ -23,8 +26,8 @@ const App: React.FC = () => {
   return (
     <div className="App">
       {screen === "start" && <StartScreen onStart={handleStart} />}
-      {screen === "game" && <GameScreen onGameEnd={handleGameEnd} />}
-      {screen === "result" && (
+      {screen === "game" && <GameScreen onResult={handleGameEnd} />}
+      {screen === "result" && isCorrect !== null && (
         <ResultScreen isCorrect={isCorrect} onRestart={handleRestart} />
       )}
     </div>

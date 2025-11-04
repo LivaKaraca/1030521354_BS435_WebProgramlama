@@ -1,40 +1,40 @@
-.App {
+body {
+  background-color: #f4f4f9;
+  font-family: Arial, sans-serif;
   text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.start-screen, .game-screen, .result-screen {
   padding: 2rem;
-  font-family: sans-serif;
 }
 
-button {
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  cursor: pointer;
-  border: none;
-  border-radius: 8px;
-  background-color: #0078ff;
-  color: white;
-  transition: 0.3s;
-}
-
-button:hover {
-  background-color: #005fcc;
-}
-
-.images {
+.image-grid {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1rem;
+  margin: 1.5rem 0;
 }
 
-.images img {
+.image-grid img {
   width: 200px;
   height: 200px;
-  object-fit: cover;
-  border-radius: 12px;
   cursor: pointer;
-  transition: 0.3s;
+  border-radius: 10px;
+  transition: transform 0.3s, border 0.3s;
+  border: 3px solid transparent;
 }
 
-.images img:hover {
+.image-grid img:hover {
   transform: scale(1.05);
+}
+
+.image-grid img.selected {
+  border-color: #007bff;
+}
+
+.hint {
+  color: #555;
+  font-style: italic;
 }
