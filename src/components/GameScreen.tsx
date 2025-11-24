@@ -10,14 +10,16 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult }) => {
   const [selected, setSelected] = useState<number | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const [attempt, setAttempt] = useState<number>(1);
-  const [timeLeft, setTimeLeft] = useState<number>(10); // ⏱️ 10 saniye süre
+  const [timeLeft, setTimeLeft] = useState<number>(10);
 
-  // Görselleri rastgele karıştıran fonksiyon
+  // 🔊 Ses efektleri
+  const correctSound = new Audio("/sounds/correct.mp3");
+  const wrongSound = new Audio("/sounds/wrong.mp3");
+
   const shuffleArray = (array: ImageOption[]) => {
     return [...array].sort(() => Math.random() - 0.5);
   };
 
-  // Oyunu başlatırken görselleri karıştır
   useEffect(() => {
     const imageSet: ImageOption[] = [
       {
@@ -39,12 +41,13 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult }) => {
         hint: "Renk geçişleri biraz yapay görünüyor olabilir.",
       },
     ];
-    setImages(shuffleArray(imageSet)); // 🔀 Rastgele sırala
+    setImages(shuffleArray(imageSet));
   }, []);
 
   // Zamanlayıcı
   useEffect(() => {
     if (timeLeft === 0) {
+      wrongSound.play(); // 🔊 Süre biterse yanlış sesi
       onResult(false);
       return;
     }
@@ -54,19 +57,21 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult }) => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [timeLeft, onResult]);
+  }, [timeLeft]);
 
-  // Görsel seçimi
   const handleSelect = (img: ImageOption) => {
     setSelected(img.id);
 
     if (img.isAI) {
+      correctSound.play(); // 🔊 Doğru ses
       onResult(true);
     } else {
       if (attempt === 1) {
+        wrongSound.play(); // 🔊 İlk yanlışta da çalabilir
         setHint(img.hint);
         setAttempt(2);
       } else {
+        wrongSound.play(); // 🔊 2. yanlış
         onResult(false);
       }
     }
