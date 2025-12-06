@@ -1,19 +1,19 @@
 import React from "react";
 
-interface ResultScreenProps {
+interface Props {
   isCorrect: boolean;
+  streak: number;
   onRestart: () => void;
 }
 
-const ResultScreen: React.FC<ResultScreenProps> = ({ isCorrect, onRestart }) => {
+const ResultScreen: React.FC<Props> = ({ isCorrect, streak, onRestart }) => {
   return (
     <div className="result-screen">
-      {isCorrect ? (
-        <h2>🎉 Tebrikler! Doğru tahmin ettin!</h2>
-      ) : (
-        <h2>❌ Maalesef yanlış tahmin!</h2>
-      )}
-      <button onClick={onRestart}>Yeni Oyun</button>
+      <h1>{isCorrect ? "Doğru!" : "Yanlış!"}</h1>
+
+      <p>Ardı ardına doğru cevap: <strong>{streak}</strong></p>
+
+      <button onClick={onRestart}>Tekrar Oyna</button>
     </div>
   );
 };
