@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ImageOption } from "../types";
 
 interface GameScreenProps {
@@ -12,66 +12,116 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult }) => {
   const [attempt, setAttempt] = useState<number>(1);
   const [timeLeft, setTimeLeft] = useState<number>(10);
 
-  // 🔊 Ses efektleri
-  const correctSound = new Audio("/sounds/correct.mp3");
-  const wrongSound = new Audio("/sounds/wrong.mp3");
-
-  const shuffleArray = (array: ImageOption[]) => {
-    return [...array].sort(() => Math.random() - 0.5);
-  };
+  const correctSound = useRef<HTMLAudioElement | null>(null);
+  const wrongSound = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const imageSet: ImageOption[] = [
+    correctSound.current = new Audio("/sounds/correct.mp3");
+    wrongSound.current = new Audio("/sounds/wrong.mp3");
+    startGame();
+  }, []);
+
+  // 🔀 Karıştırma
+  const shuffleArray = <T,>(array: T[]): T[] =>
+    [...array].sort(() => Math.random() - 0.5);
+
+  // 🧠 Oyun başlat
+  const startGame = () => {
+    setSelected(null);
+    setHint(null);
+    setAttempt(1);
+    setTimeLeft(10);
+
+    const realImages: ImageOption[] = [
       {
         id: 1,
         src: "https://picsum.photos/id/1011/200/200",
         isAI: false,
-        hint: "Arka plandaki doğa detaylarına dikkat et.",
+        hint: "Doğal ışık ve detaylara dikkat et.",
       },
       {
         id: 2,
-        src: "https://picsum.photos/id/1025/200/200",
+        src: "https://picsum.photos/id/1015/200/200",
         isAI: false,
-        hint: "Yüz simetrisine dikkat et.",
+        hint: "Bulutlar çok doğal görünüyor.",
       },
       {
         id: 3,
-        src: "https://placehold.co/200x200?text=AI+Generated",
-        isAI: true,
-        hint: "Renk geçişleri biraz yapay görünüyor olabilir.",
+        src: "https://picsum.photos/id/1020/200/200",
+        isAI: false,
+        hint: "Derinlik hissi güçlü.",
+      },
+      {
+        id: 4,
+        src: "https://picsum.photos/id/1039/200/200",
+        isAI: false,
+        hint: "Renk geçişleri yumuşak.",
+      },
+      {
+        id: 5,
+        src: "https://picsum.photos/id/1043/200/200",
+        isAI: false,
+        hint: "Doğal perspektif var.",
       },
     ];
-    setImages(shuffleArray(imageSet));
-  }, []);
 
-  // Zamanlayıcı
+    const aiImages: ImageOption[] = [
+      {
+        id: 100,
+        src: "https://placehold.co/200x200?text=AI+Landscape+1",
+        isAI: true,
+        hint: "Detaylar fazla kusursuz olabilir.",
+      },
+      {
+        id: 101,
+        src: "https://placehold.co/200x200?text=AI+Landscape+2",
+        isAI: true,
+        hint: "Doku tekrarlarına dikkat et.",
+      },
+      {
+        id: 102,
+        src: "https://placehold.co/200x200?text=AI+Landscape+3",
+        isAI: true,
+        hint: "Işık yönü tutarsız olabilir.",
+      },
+    ];
+
+    const selectedAI = shuffleArray(aiImages)[0];
+    const selectedReal = shuffleArray(realImages).slice(0, 4);
+
+    setImages(shuffleArray([selectedAI, ...selectedReal]));
+  };
+
+  // ⏱️ Zamanlayıcı
   useEffect(() => {
     if (timeLeft === 0) {
-      wrongSound.play(); // 🔊 Süre biterse yanlış sesi
+      wrongSound.current?.play();
       onResult(false);
       return;
     }
 
     const timer = setTimeout(() => {
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft(prev => prev - 1);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [timeLeft]);
+  }, [timeLeft, onResult]);
 
   const handleSelect = (img: ImageOption) => {
+    if (selected !== null) return;
+
     setSelected(img.id);
 
     if (img.isAI) {
-      correctSound.play(); // 🔊 Doğru ses
+      correctSound.current?.play();
       onResult(true);
     } else {
       if (attempt === 1) {
-        wrongSound.play(); // 🔊 İlk yanlışta da çalabilir
+        wrongSound.current?.play();
         setHint(img.hint);
         setAttempt(2);
       } else {
-        wrongSound.play(); // 🔊 2. yanlış
+        wrongSound.current?.play();
         onResult(false);
       }
     }
@@ -80,22 +130,21 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult }) => {
   return (
     <div className="game-screen">
       <h2>Hangisi AI tarafından üretildi?</h2>
-      <p className="timer">⏱️ Kalan süre: {timeLeft} saniye</p>
+      <p>⏱️ Kalan süre: {timeLeft} saniye</p>
 
       <div className="image-grid">
-        {images.map((img) => (
+        {images.map(img => (
           <img
             key={img.id}
             src={img.src}
-            alt={`option-${img.id}`}
             onClick={() => handleSelect(img)}
             className={selected === img.id ? "selected" : ""}
+            alt="option"
           />
         ))}
       </div>
 
       {hint && <p className="hint">💡 İpucu: {hint}</p>}
-      <p>{attempt === 1 ? "İlk tahmin hakkın!" : "İkinci ve son tahminin!"}</p>
     </div>
   );
 };
