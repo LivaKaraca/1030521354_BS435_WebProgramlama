@@ -1,150 +1,150 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ImageOption } from "../types";
+import "./GameScreen.css";
 
 interface GameScreenProps {
-  onResult: (isCorrect: boolean) => void;
+  onResult: (correct: boolean) => void;
+  mode: "classic" | "fast";
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ onResult }) => {
+const realImages = [
+  "https://picsum.photos/id/1011/300/300",
+  "https://picsum.photos/id/1015/300/300",
+  "https://picsum.photos/id/1020/300/300",
+  "https://picsum.photos/id/1024/300/300",
+  "https://picsum.photos/id/1025/300/300",
+  "https://picsum.photos/id/1036/300/300",
+];
+
+const aiImages = [
+  "https://picsum.photos/seed/ai1/300/300",
+  "https://picsum.photos/seed/ai2/300/300",
+  "https://picsum.photos/seed/ai3/300/300",
+  "https://picsum.photos/seed/ai4/300/300",
+  "https://picsum.photos/seed/ai5/300/300",
+];
+
+const shuffle = <T,>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5);
+
+const GameScreen: React.FC<GameScreenProps> = ({ onResult, mode }) => {
   const [images, setImages] = useState<ImageOption[]>([]);
-  const [selected, setSelected] = useState<number | null>(null);
+  const [attempt, setAttempt] = useState(1);
   const [hint, setHint] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState<number>(1);
-  const [timeLeft, setTimeLeft] = useState<number>(10);
+  const [timeLeft, setTimeLeft] = useState(mode === "fast" ? 5 : 10);
 
-  const correctSound = useRef<HTMLAudioElement | null>(null);
-  const wrongSound = useRef<HTMLAudioElement | null>(null);
+  const correctSound = new Audio("/sounds/correct.mp3");
+  const wrongSound = new Audio("/sounds/wrong.mp3");
 
-  useEffect(() => {
-    correctSound.current = new Audio("/sounds/correct.mp3");
-    wrongSound.current = new Audio("/sounds/wrong.mp3");
-    startGame();
-  }, []);
+  const generateRound = () => {
+    const real = shuffle(realImages).slice(0, 2);
+    const ai = shuffle(aiImages)[0];
 
-  // 🔀 Karıştırma
-  const shuffleArray = <T,>(array: T[]): T[] =>
-    [...array].sort(() => Math.random() - 0.5);
+    setImages(
+      shuffle([
+        { id: 1, src: real[0], isAI: false, hint: "Işık ve gölgeler doğal mı?" },
+        { id: 2, src: real[1], isAI: false, hint: "Detaylar aşırı kusursuz mu?" },
+        { id: 3, src: ai, isAI: true, hint: "Kenarlar yapay duruyor olabilir." },
+      ])
+    );
 
-  // 🧠 Oyun başlat
-  const startGame = () => {
-    setSelected(null);
-    setHint(null);
     setAttempt(1);
-    setTimeLeft(10);
-
-    const realImages: ImageOption[] = [
-      {
-        id: 1,
-        src: "https://picsum.photos/id/1011/200/200",
-        isAI: false,
-        hint: "Doğal ışık ve detaylara dikkat et.",
-      },
-      {
-        id: 2,
-        src: "https://picsum.photos/id/1015/200/200",
-        isAI: false,
-        hint: "Bulutlar çok doğal görünüyor.",
-      },
-      {
-        id: 3,
-        src: "https://picsum.photos/id/1020/200/200",
-        isAI: false,
-        hint: "Derinlik hissi güçlü.",
-      },
-      {
-        id: 4,
-        src: "https://picsum.photos/id/1039/200/200",
-        isAI: false,
-        hint: "Renk geçişleri yumuşak.",
-      },
-      {
-        id: 5,
-        src: "https://picsum.photos/id/1043/200/200",
-        isAI: false,
-        hint: "Doğal perspektif var.",
-      },
-    ];
-
-    const aiImages: ImageOption[] = [
-      {
-        id: 100,
-        src: "https://placehold.co/200x200?text=AI+Landscape+1",
-        isAI: true,
-        hint: "Detaylar fazla kusursuz olabilir.",
-      },
-      {
-        id: 101,
-        src: "https://placehold.co/200x200?text=AI+Landscape+2",
-        isAI: true,
-        hint: "Doku tekrarlarına dikkat et.",
-      },
-      {
-        id: 102,
-        src: "https://placehold.co/200x200?text=AI+Landscape+3",
-        isAI: true,
-        hint: "Işık yönü tutarsız olabilir.",
-      },
-    ];
-
-    const selectedAI = shuffleArray(aiImages)[0];
-    const selectedReal = shuffleArray(realImages).slice(0, 4);
-
-    setImages(shuffleArray([selectedAI, ...selectedReal]));
+    setHint(null);
+    setTimeLeft(mode === "fast" ? 5 : 10);
   };
 
-  // ⏱️ Zamanlayıcı
+  useEffect(() => {
+    generateRound();
+  }, []);
+
   useEffect(() => {
     if (timeLeft === 0) {
-      wrongSound.current?.play();
+      wrongSound.play();
       onResult(false);
       return;
     }
 
-    const timer = setTimeout(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [timeLeft, onResult]);
+    const t = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timeLeft]);
 
   const handleSelect = (img: ImageOption) => {
-    if (selected !== null) return;
-
-    setSelected(img.id);
-
     if (img.isAI) {
-      correctSound.current?.play();
+      correctSound.play();
       onResult(true);
+      generateRound();
+      return;
+    }
+
+    wrongSound.play();
+
+    if (mode === "fast") {
+      onResult(false);
+      return;
+    }
+
+    if (attempt === 1) {
+      setHint(img.hint);
+      setAttempt(2);
     } else {
-      if (attempt === 1) {
-        wrongSound.current?.play();
-        setHint(img.hint);
-        setAttempt(2);
-      } else {
-        wrongSound.current?.play();
-        onResult(false);
-      }
+      onResult(false);
     }
   };
 
   return (
     <div className="game-screen">
-      <h2>Hangisi AI tarafından üretildi?</h2>
-      <p>⏱️ Kalan süre: {timeLeft} saniye</p>
+      <header className="game-header">
+        <h2>🤖 Hangisi AI tarafından üretildi?</h2>
+        <span className={`mode-badge ${mode}`}>
+          {mode === "fast" ? "⚡ Hızlı Mod" : "🎯 Klasik Mod"}
+        </span>
+      </header>
 
-      <div className="image-grid">
-        {images.map(img => (
-          <img
-            key={img.id}
-            src={img.src}
-            onClick={() => handleSelect(img)}
-            className={selected === img.id ? "selected" : ""}
-            alt="option"
+      {/* TIMER */}
+      <div className="timer-box">
+        <p>⏱️ {timeLeft} saniye</p>
+        <div className="time-bar">
+          <div
+            className="time-progress"
+            style={{
+              width: `${(timeLeft / (mode === "fast" ? 5 : 10)) * 100}%`,
+            }}
           />
+        </div>
+      </div>
+
+      {/* IMAGES */}
+      <div className="image-grid">
+        {images.map((img) => (
+          <div
+            key={img.id}
+            className="image-card"
+            onClick={() => handleSelect(img)}
+          >
+            <img src={img.src} alt="choice" />
+          </div>
         ))}
       </div>
 
-      {hint && <p className="hint">💡 İpucu: {hint}</p>}
+      {/* INFO */}
+      <div className="info-area">
+        {mode === "classic" && hint && (
+          <p className="hint">💡 İpucu: {hint}</p>
+        )}
+
+        {mode === "classic" && (
+          <p className="attempt">
+            {attempt === 1
+              ? "İlk tahmin hakkın"
+              : "İkinci ve son tahminin"}
+          </p>
+        )}
+
+        {mode === "fast" && (
+          <p className="fast-info">
+            ⚡ Bu modda süren yalnızca <b>5 saniye</b>
+          </p>
+        )}
+      </div>
     </div>
   );
 };

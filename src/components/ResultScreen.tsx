@@ -1,26 +1,23 @@
 import React from "react";
+import "./ResultScreen.css";
 
-interface ResultScreenProps {
-  isCorrect: boolean;
+interface Props {
   streak: number;
   onRestart: () => void;
 }
 
-const ResultScreen: React.FC<ResultScreenProps> = ({
-  isCorrect,
-  streak,
-  onRestart,
-}) => {
+const ResultScreen: React.FC<Props> = ({ streak, onRestart }) => {
   return (
-    <div style={{ textAlign: "center", marginTop: 80 }}>
-      <h2>{isCorrect ? "✅ Doğru Bildin!" : "❌ Yanlış Seçim"}</h2>
+    <div className="result-screen">
+      <h2>❌ Oyun Bitti</h2>
 
-      <p>
-        🔥 Ardışık Doğru Sayısı: <strong>{streak}</strong>
-      </p>
+      <div className="streak-box">
+        🔥 Ardışık Doğru
+        <span>{streak}</span>
+      </div>
 
-      <button onClick={onRestart} style={{ marginTop: 20 }}>
-        Tekrar Oyna
+      <button className="restart-btn" onClick={onRestart}>
+        🔄 Tekrar Oyna
       </button>
     </div>
   );

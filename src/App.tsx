@@ -1,49 +1,54 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import StartScreen from "./components/StartScreen";
 import GameScreen from "./components/GameScreen";
 import ResultScreen from "./components/ResultScreen";
-import "./App.css";
+
+type Mode = "classic" | "fast";
 
 const App: React.FC = () => {
   const [screen, setScreen] = useState<"start" | "game" | "result">("start");
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [mode, setMode] = useState<Mode>("classic");
   const [streak, setStreak] = useState<number>(0);
 
-  // Sonuç geldiğinde streak hesapla
-  useEffect(() => {
-    if (screen === "result" && isCorrect !== null) {
-      if (isCorrect) setStreak(prev => prev + 1);
-      else setStreak(0);
+  const handleResult = (correct: boolean) => {
+    if (correct) {
+      // ✅ doğru → streak artar, oyun devam eder
+      setStreak((prev) => prev + 1);
+    } else {
+      // ❌ yanlış → oyun biter
+      setScreen("result");
     }
-  }, [screen, isCorrect]);
-
-  // Oyunu başlat
-  const handleStart = () => setScreen("game");
-
-  // Oyun bittiğinde
-  const handleGameEnd = (correct: boolean) => {
-    setIsCorrect(correct);
-    setScreen("result");
   };
 
-  // Yeniden başlat
+  const handleStart = (selectedMode: Mode) => {
+    setMode(selectedMode);
+    setStreak(0);
+    setScreen("game");
+  };
+
   const handleRestart = () => {
-    setIsCorrect(null);
+    setStreak(0);
     setScreen("start");
   };
 
   return (
-    <div className="App">
+    <>
       {screen === "start" && <StartScreen onStart={handleStart} />}
-      {screen === "game" && <GameScreen onResult={handleGameEnd} />}
-      {screen === "result" && isCorrect !== null && (
+
+      {screen === "game" && (
+        <GameScreen
+          mode={mode}
+          onResult={handleResult}
+        />
+      )}
+
+      {screen === "result" && (
         <ResultScreen
-          isCorrect={isCorrect}
           streak={streak}
           onRestart={handleRestart}
         />
       )}
-    </div>
+    </>
   );
 };
 
