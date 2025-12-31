@@ -86,3 +86,21 @@
   color: #ff5252;
   font-weight: bold;
 }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sound-toggle {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.sound-toggle:hover {
+  transform: scale(1.2);
+}

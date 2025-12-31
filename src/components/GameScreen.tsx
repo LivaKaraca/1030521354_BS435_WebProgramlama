@@ -32,12 +32,17 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult, mode }) => {
   const [hint, setHint] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(mode === "fast" ? 5 : 10);
 
+  // 🔊 SES AÇ / KAPA
+  const [soundOn, setSoundOn] = useState(true);
+
   const correctSound = useRef<HTMLAudioElement | null>(null);
   const wrongSound = useRef<HTMLAudioElement | null>(null);
 
-  /** 🔊 Güvenli ses çalma (browser + jest uyumlu) */
+  /** 🔊 Güvenli ses çalma (toggle + browser + jest uyumlu) */
   const playSound = (audio: HTMLAudioElement | null) => {
-    if (!audio) return;
+    if (!soundOn || !audio) return;
+
+    audio.pause();
     audio.currentTime = 0;
 
     const result = audio.play();
@@ -110,9 +115,21 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult, mode }) => {
     <div className="game-screen">
       <header className="game-header">
         <h2>🤖 Hangisi AI tarafından üretildi?</h2>
-        <span className={`mode-badge ${mode}`}>
-          {mode === "fast" ? "⚡ Hızlı Mod" : "🎯 Klasik Mod"}
-        </span>
+
+        <div className="header-right">
+          <span className={`mode-badge ${mode}`}>
+            {mode === "fast" ? "⚡ Hızlı Mod" : "🎯 Klasik Mod"}
+          </span>
+
+          {/* 🔊 SES TOGGLE */}
+          <button
+            className="sound-toggle"
+            onClick={() => setSoundOn((prev) => !prev)}
+            title={soundOn ? "Sesi Kapat" : "Sesi Aç"}
+          >
+            {soundOn ? "🔊" : "🔇"}
+          </button>
+        </div>
       </header>
 
       <div className="timer-box">
