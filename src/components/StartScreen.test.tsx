@@ -15,3 +15,11 @@ test("klasik mod seçildiğinde onStart çağrılır", () => {
   fireEvent.click(screen.getByText(/Klasik Mod/i));
   expect(mockStart).toHaveBeenCalledWith("classic");
 });
+
+test("hızlı mod seçildiğinde onStart çağrılır", () => {
+  const mockStart = jest.fn();
+  render(<StartScreen onStart={mockStart} />);
+
+  fireEvent.click(screen.getByText(/Hızlı Mod/i));
+  expect(mockStart).toHaveBeenCalledWith("fast");
+});

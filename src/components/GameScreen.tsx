@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ImageOption } from "../types";
 import "./GameScreen.css";
 
@@ -32,8 +32,19 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult, mode }) => {
   const [hint, setHint] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(mode === "fast" ? 5 : 10);
 
-  const correctSound = new Audio("/sounds/correct.mp3");
-  const wrongSound = new Audio("/sounds/wrong.mp3");
+  const correctSound = useRef<HTMLAudioElement | null>(null);
+  const wrongSound = useRef<HTMLAudioElement | null>(null);
+
+  /** 🔊 Güvenli ses çalma (browser + jest uyumlu) */
+  const playSound = (audio: HTMLAudioElement | null) => {
+    if (!audio) return;
+    audio.currentTime = 0;
+
+    const result = audio.play();
+    if (result && typeof result.catch === "function") {
+      result.catch(() => {});
+    }
+  };
 
   const generateRound = () => {
     const real = shuffle(realImages).slice(0, 2);
@@ -53,29 +64,34 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult, mode }) => {
   };
 
   useEffect(() => {
+    correctSound.current = new Audio("/sounds/correct.mp3");
+    wrongSound.current = new Audio("/sounds/wrong.mp3");
     generateRound();
   }, []);
 
   useEffect(() => {
     if (timeLeft === 0) {
-      wrongSound.play();
+      playSound(wrongSound.current);
       onResult(false);
       return;
     }
 
-    const t = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => {
+      setTimeLeft((t) => t - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [timeLeft]);
 
   const handleSelect = (img: ImageOption) => {
     if (img.isAI) {
-      correctSound.play();
+      playSound(correctSound.current);
       onResult(true);
       generateRound();
       return;
     }
 
-    wrongSound.play();
+    playSound(wrongSound.current);
 
     if (mode === "fast") {
       onResult(false);
@@ -99,7 +115,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult, mode }) => {
         </span>
       </header>
 
-      {/* TIMER */}
       <div className="timer-box">
         <p>⏱️ {timeLeft} saniye</p>
         <div className="time-bar">
@@ -112,7 +127,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult, mode }) => {
         </div>
       </div>
 
-      {/* IMAGES */}
       <div className="image-grid">
         {images.map((img) => (
           <div
@@ -125,7 +139,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onResult, mode }) => {
         ))}
       </div>
 
-      {/* INFO */}
       <div className="info-area">
         {mode === "classic" && hint && (
           <p className="hint">💡 İpucu: {hint}</p>
